@@ -4,15 +4,20 @@ BIN    := snowflake-service
 GOBIN    := $(shell go env GOPATH)/bin
 GOSRC    := $(shell find . -type f -name '*.go' -print) go.mod go.sum
 PROTOSRC := $(shell find . -type f -name '*.proto' -print)
+SQLSRC   := $(shell find . -type f -name '*.sql' -print)
 
 GOGEN     := $(GOBIN)/protoc-gen-go
 GOGRPC    := $(GOBIN)/protoc-gen-go-grpc
 VTPROTO   := $(GOBIN)/protoc-gen-go-vtproto
 GOIMPORTS := $(GOBIN)/goimports
+SQLC      := $(GOBIN)/sqlc
 
 PROTODIR := ./api
 PROTOGEN := $(PROTODIR)/pb
 PROTODEF := $(patsubst $(PROTODIR)/%,%,$(PROTOSRC))
+
+SQLDIR := ./build/package/snowflake-service
+SQLGEN := ./internal/db/sqlc
 
 VTFLAGS := marshal+unmarshal+size
 LDFLAGS := -w -s
@@ -42,7 +47,7 @@ test:
 #  generate
 
 .PHONY: generate
-generate: $(VTPROTO) $(GOGEN) $(GOGRPC) $(PROTODIR)/pb/.protogen
+generate: $(VTPROTO) $(GOGEN) $(GOGRPC) $(PROTODIR)/pb/.protogen $(SQLGEN)/.sqlgen
 
 $(PROTOGEN)/.protogen: $(PROTOSRC)
 	protoc --proto_path=$(PROTODIR)                                  \
@@ -52,6 +57,10 @@ $(PROTOGEN)/.protogen: $(PROTOSRC)
 		--go-vtproto_opt=features=$(VTFLAGS)                         \
 		$(PROTODEF)
 	@touch $(PROTOGEN)/.protogen
+
+$(SQLGEN)/.sqlgen: $(SQLSRC)
+	$(SQLC) -f $(SQLDIR)/sqlc.yaml generate
+	@touch $(SQLGEN)/.sqlgen
 
 # -----------------------------------------------------------------
 #  dependencies
@@ -68,6 +77,9 @@ $(VTPROTO):
 $(GOIMPORTS):
 	(cd /; go install golang.org/x/tools/cmd/goimports@latest)
 
+$(SQLC):
+	(cd /; go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest)
+
 # -----------------------------------------------------------------
 #  misc
 
@@ -75,7 +87,12 @@ $(GOIMPORTS):
 format: $(GOIMPORTS)
 	GO111MODULE=on go list -f '{{.Dir}}' ./... | xargs $(GOIMPORTS) -w -local github.com/uplite/snowflake-service
 
+.PHONY: migration
+migration: $(MIGRATE)
+	$(MIGRATE) create -ext sql -dir build/package/snowflake-service/migrations/ -seq -digits 4 $(NAME)
+
 .PHONY: clean
 clean:
 	rm -rf $(PROTOGEN)
+	rm -rf $(SQLGEN)
 	rm -rf $(BINDIR)
