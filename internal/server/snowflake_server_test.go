@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/uplite/snowflake-service/api/pb"
-	"github.com/uplite/snowflake-service/internal/config"
 )
 
 const mockSnowflake = "mock_snowflake"
@@ -26,7 +25,7 @@ func TestSnowflakeServer(t *testing.T) {
 	s := NewSnowflakeServer(&mockCreator{})
 	pb.RegisterSnowflakeServiceServer(grpcServer, s)
 
-	lis, err := net.Listen("tcp", ":"+config.GetGrpcServerPort())
+	lis, err := net.Listen("tcp", ":50052")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +33,7 @@ func TestSnowflakeServer(t *testing.T) {
 	go grpcServer.Serve(lis)
 	defer grpcServer.Stop()
 
-	conn, err := grpc.NewClient(":"+config.GetGrpcServerPort(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(":50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatalf("failed to dial server: %v", err)
 	}
