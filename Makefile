@@ -47,7 +47,7 @@ test:
 #  generate
 
 .PHONY: generate
-generate: $(VTPROTO) $(GOGEN) $(GOGRPC) $(PROTODIR)/pb/.protogen $(SQLGEN)/.sqlgen
+generate: $(VTPROTO) $(GOGEN) $(GOGRPC) $(SQLC) $(PROTODIR)/pb/.protogen $(SQLGEN)/.sqlgen
 
 $(PROTOGEN)/.protogen: $(PROTOSRC)
 	protoc --proto_path=$(PROTODIR)                                  \
