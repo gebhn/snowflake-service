@@ -13,6 +13,10 @@ func GetTursoDbToken() string {
 	return readEnvVar("TURSO_DB_TOKEN", "super.secret_token")
 }
 
+func GetGrpcServerPort() string {
+	return readEnvVar("GRPC_SERVER_PORT", "50051")
+}
+
 func readEnvVar(envVar, suggestion string) string {
 	if value, ok := os.LookupEnv(envVar); ok {
 		return value

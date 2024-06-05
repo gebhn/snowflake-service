@@ -15,6 +15,7 @@ Required environment variables can be found inside of the [example env](./env.ex
 ```sh
     export TURSO_DB_URL=libsql://your-database-here.turso.io
     export TURSO_DB_TOKEN=y0uR.D4T4BAs3_toK3N
+    export GRPC_SERVER_PORT=50051
 ```
 
 #### Code Generation
